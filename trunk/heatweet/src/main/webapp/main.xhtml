@@ -55,14 +55,14 @@
 <h:body>
 	<h:form id="frm" prependId="false">
 		<div>
-			<h:inputText id="search" value="#{tweetMB.busca}" />
+			<h:inputText required="true" id="search" value="#{tweetMB.busca}" />
 			<h:commandButton value="procurar" action="#{tweetMB.findWoeid}"
 				onclick="codeAddress()">
 				<f:ajax render="woeid" execute="@form" />
 			</h:commandButton>
 			<h:inputHidden id="woeid" value="#{tweetMB.woeid}" />
 		</div>
-		<div id="map_canvas" style="width: 400px; height: 500px;"></div>
+		<div id="map_canvas" style="width: 800px; height: 500px;"></div>
 		<div id="retorno"></div>
 	</h:form>
 </h:body>
