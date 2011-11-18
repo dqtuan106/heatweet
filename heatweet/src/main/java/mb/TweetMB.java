@@ -1,84 +1,51 @@
 package mb;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
 
 import javax.faces.bean.ManagedBean;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 import twitter4j.Place;
+import twitter4j.Trend;
+
+import model.Location;
+import controller.ServicesController;
 import controller.TwitController;
 
-@Path("tweet")
-@ManagedBean(name="tweetMB")
+@ManagedBean(name = "tweetMB")
 public class TweetMB {
 	private int woeid;
 	private float latitude;
 	private float longitude;
 	private String busca;
-	
-	private TwitController control;
-	
-	public TweetMB() {
-		control = new TwitController();
-	}
-	public void findWoeid() {
 
-		try {
-			URL url = new URL("http://where.yahooapis.com/geocode?q="
-							+ URLEncoder.encode(busca,"UTF-8")
-							+ "&appid=dj0yJmk9Y2dYUDVqVDJhRlBnJmQ9WVdrOVZVMVFha2wwTlRBbWNHbzlOamswTlRRME5qWXkmcz1jb25zdW1lcnNlY3JldCZ4PTAy");			
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					url.openStream()));
-			String line;
-			StringWriter conteudo = new StringWriter();
-			while ((line = br.readLine()) != null) {
-				conteudo.append(line);
-			}
-			String c = null;
-			c = conteudo.toString();
-			System.out.println(c);
-			int inicio = c.indexOf("<woeid>");
-			int fim = c.indexOf("</woeid>");
-			c= c.substring(inicio+"<woeid>".length(), fim);
-			
-			woeid = Integer.parseInt(c);			
-			
-			
-			
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	private TwitController twitController;
+	private ServicesController servicesController;
+
+	public TweetMB() {
+		twitController = new TwitController();
+		servicesController = new ServicesController();
 	}
-	
-	@GET
-	@Path(value="location")
-	@Produces(MediaType.APPLICATION_JSON)
-	public String getTweetsquery(@QueryParam("q") String query,@QueryParam("latitude")float latitude,@QueryParam("longitude") float longitude ) {
-		StringBuffer sb = new StringBuffer();
-		sb.append("{places:[");
-		List<Place> places = control.findTwitPlaces(query, latitude, longitude);
+
+	public void findWoeid() {
+		Location local = servicesController.findWoeid(busca);
+		woeid = local.getWoeid();
+		List<Place> places = twitController.findTwitPlaces(busca,
+				local.getLatitude(), local.getLongitude());
 		for (Place place : places) {
-			sb.append(place.getName() + " : " +place.getPlaceType() +" ,");
+			local = servicesController.findWoeid(place.getName());
+			List<Trend> trends = twitController.searchByLocation(local.getWoeid());
+			System.out.println( place.getName());
+			if(trends.size() > 0) {
+				System.out.println("Trends");
+				for (Trend trend : trends) {
+					System.out.println(trend.getName());
+				}
+			}
+			
 		}
-		sb.append("]}");
-		return sb.toString();
 		
 	}
+
 	public int getWoeid() {
 		return woeid;
 	}

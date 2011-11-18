@@ -3,7 +3,14 @@ package controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import store.AccessTokenStore;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import factory.TwitterBuilderFactory;
+
 import twitter4j.GeoLocation;
 import twitter4j.GeoQuery;
 import twitter4j.Place;
@@ -15,67 +22,23 @@ import twitter4j.Trends;
 import twitter4j.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
-import twitter4j.auth.AccessToken;
+import twitter4j.TwitterFactory;
 import twitter4j.auth.RequestToken;
-import factory.TwitterFactory;
 
+@Path("tweet")
 public class TwitController {
 	public static RequestToken requestToken;
 
-	public void authenticate() {
-		try {
-			Twitter twitter = TwitterFactory.getTwitter();
-			twitter.setOAuthConsumer("4xyZR4XZHHG013alEUIkQ",
-					"EN3CMxhZvojYMkhFbikWde0RC99STiHmWbBp80l8dE");
+	@GET
+	@Path(value = "oauth")
+	public String oauthSingleUser() {
 
-			requestToken = twitter.getOAuthRequestToken();
-			System.out.println(requestToken.getAuthorizationURL());
-
-		} catch (TwitterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void getAccessToken(String pin) {
-		try {
-			Twitter twitter = TwitterFactory.getTwitter();
-			AccessToken accessToken = null;
-
-			accessToken = twitter.getOAuthAccessToken(requestToken, pin);
-
-			AccessTokenStore.gravarToken(accessToken);
-			System.out.println(accessToken.toString());
-			System.out.println(accessToken.getToken());
-			System.out.println(accessToken.getTokenSecret());
-		} catch (TwitterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void authorize(String pin) {
-		Twitter twitter = TwitterFactory.getTwitter();
-		if (AccessTokenStore.getAccessToken() == null) {
-			getAccessToken(pin);
-		}
-
-		AccessToken accessToken = AccessTokenStore.getAccessToken();
-		twitter.setOAuthAccessToken(accessToken);
-	}
-
-	public void setAccessToken() {
-		Twitter twitter = TwitterFactory.getTwitter();
-		twitter.setOAuthConsumer("4xyZR4XZHHG013alEUIkQ",
-				"EN3CMxhZvojYMkhFbikWde0RC99STiHmWbBp80l8dE");
-		AccessTokenStore.carregaToken();
-		AccessToken accessToken = AccessTokenStore.getAccessToken();
-		twitter.setOAuthAccessToken(accessToken);
+		return null;
 	}
 
 	public void search() {
 		try {
-			Twitter twitter = TwitterFactory.getTwitter();
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			Query query = new Query("flamengo");
 			QueryResult result;
 
@@ -94,7 +57,7 @@ public class TwitController {
 			double longitude) {
 		ResponseList<Place> places = null;
 		try {
-			Twitter twitter = TwitterFactory.getTwitter();
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			GeoLocation location = new GeoLocation(latitude, longitude);
 			GeoQuery q = new GeoQuery(location);
 
@@ -103,26 +66,79 @@ public class TwitController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return places;
 	}
 
-	public List<Trend> searchByLocation(int woeid) {
+	@GET
+	@Path(value = "trends")
+	public List<Trend> searchByLocation(@QueryParam("woeid") int woeid) {
+		List<Trend> trendsList = new ArrayList<Trend>();
 		try {
-			List<Trend> trendsList = new ArrayList<Trend>();
-			Twitter twitter = TwitterFactory.getTwitter();
+
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
 
 			Trends trends = twitter.getLocationTrends(woeid);
 			Trend[] ts = trends.getTrends();
 			for (Trend trend : ts) {
 				trendsList.add(trend);
 			}
-			return trendsList;
 
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
+
 		}
+		return trendsList;
+	}
+
+	@GET
+	@Path(value = "location")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getTweetsquery(@QueryParam("q") String query,
+			@QueryParam("latitude") double latitude,
+			@QueryParam("longitude") double longitude) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("{places:[");
+		List<Place> places = findTwitPlaces(query, latitude, longitude);
+		for (Place place : places) {
+			sb.append(place.getName() + " : " + place.getPlaceType() + " ,");
+		}
+		sb.append("]}");
+		return sb.toString();
+
+	}
+
+	@GET
+	@Path(value = "maxperlocation")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getMaxResultsPerLocation(@QueryParam("q") String query,
+			@QueryParam("latitude") double latitude,
+			@QueryParam("longitude") double longitude) {
+		StringBuffer sb = new StringBuffer();
+		try {
+			
+			GeoLocation local = new GeoLocation(latitude, longitude);
+			Query q = new Query("q");
+			q.geoCode(local, 50.0, Query.KILOMETERS);
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
+			QueryResult result;
+			result = twitter.search(q);
+			List<Tweet> tweets = result.getTweets();
+			
+			sb.append("{tweets: [");
+			for (Tweet tweet : tweets) {
+
+				sb.append("{tweet :" + tweet.getText() + ",");
+				sb.append(" location :" + tweet.getLocation() + "}");
+
+			}
+			sb.append("]}");
+		} catch (TwitterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return sb.toString();
+
 	}
 }
