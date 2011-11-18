@@ -119,7 +119,7 @@ public class TwitController {
 		try {
 			
 			GeoLocation local = new GeoLocation(latitude, longitude);
-			Query q = new Query("q");
+			Query q = new Query(query);
 			q.geoCode(local, 50.0, Query.KILOMETERS);
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
