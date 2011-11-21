@@ -29,6 +29,8 @@ public class FusionController {
 	private static final String FUSION_SERVICE_URL = "https://www.google.com/fusiontables/api/query";
 	URL url;
 
+	
+	
 	private GoogleService authenticate() throws AuthenticationException {
 		if (service == null) {
 			service = new GoogleService("fusiontables", "HeaTweet");
@@ -40,7 +42,7 @@ public class FusionController {
 	}
 
 	@GET
-	@Path(value = "auth")
+	@Path(value = "create")
 	public String createTable(@QueryParam("param") String param) {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);

@@ -18,18 +18,20 @@
 			geocoder = new google.maps.Geocoder();
 			var latlng = new google.maps.LatLng(-22.54, -43.13);
 			var myOptions = {
-				zoom : 8,
+				zoom : 7,
 				center : latlng,
 				mapTypeId : google.maps.MapTypeId.ROADMAP
 			};
 			map = new google.maps.Map(dojo.byId("map_canvas"), myOptions);
 
 
-
+			
 			var layer = new google.maps.FusionTablesLayer({
 			  query: {
-			    select: 'Geocodable address',
-			    from: '139529'
+			    /*select: 'local',
+			    from: 2228251*/
+				  select: 'Location',
+		          from: 2228772
 			  },heatmap: {
 				    enabled: true
 			  }
@@ -62,20 +64,15 @@
 	<title>A Simple JavaServer Faces 2.0 View</title>
 </h:head>
 <h:body>
-	<h:form id="frm" prependId="false">
-		<h:outputScript library="js" name="MCustomTileLayer.js"
-			target="head" />
-		<h:outputScript library="js" name="MTileLayerControl_v3.js"
-			target="head" />
+	<h:form id="frm" prependId="false">		
 		<div>
 			<h:inputText required="true" id="search" value="#{tweetMB.busca}" />
 			<h:commandButton value="procurar" action="#{tweetMB.findWoeid}"
 				onclick="codeAddress()">
-				<f:ajax render="woeid" execute="@form" />type filter text
+				<f:ajax render="woeid" execute="@form" />
 			</h:commandButton>
 			<h:inputHidden id="woeid" value="#{tweetMB.woeid}" />
 		</div>
-		<div id="controlsDiv" style="border: 1px solid gray"></div>
 		<div id="map_canvas" style="width: 800px; height: 500px;"></div>
 		<div id="retorno"></div>
 	</h:form>

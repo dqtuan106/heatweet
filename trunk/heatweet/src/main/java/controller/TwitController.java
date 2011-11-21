@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.print.DocFlavor.STRING;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -169,11 +170,12 @@ public class TwitController {
 				result = twitter.search(q);
 				List<Tweet> tweets = result.getTweets();
 				for (Tweet tweet : tweets) {
-					try{
+					try {
 						Location location = servicesController.findWoeid(tweet
 								.getLocation());
-	
-						String chave = location.getEstado() + location.getCidade();
+
+						String chave = location.getEstado()
+								+ location.getCidade();
 						if (!locations.containsKey(chave)) {
 							locations.put(chave, location);
 						}
@@ -184,26 +186,68 @@ public class TwitController {
 							twitTrends.put(chave, 1);
 						}
 					} catch (Exception e) {
-						System.out.println(tweet
-								.getLocation());
+						System.out.println(tweet.getLocation());
 					}
 				}
 			}
 
 			Set<String> chaves = twitTrends.keySet();
 			for (String chave : chaves) {
-				fusionController.insert("2228251",
+				fusionController.insert(
+						"2228251",
 						"local,tweets,latitude,longitude",
-						"'"+locations.get(chave).getCidade()+"',"+
-						twitTrends.get(chave)+","+
-						locations.get(chave).getLatitude()+","+
-						locations.get(chave).getLongitude());
+						"'" + locations.get(chave).getCidade() + "',"
+								+ twitTrends.get(chave) + ","
+								+ locations.get(chave).getLatitude() + ","
+								+ locations.get(chave).getLongitude());
 			}
 			return "ok";
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
+		}
+		return "nok";
+	}
+
+	@GET
+	@Path("carregatweets")
+	public String carregaTweets(@QueryParam("q") String query,
+			@QueryParam("latitude") double latitude,
+			@QueryParam("longitude") double longitude) {
+		try {
+			FusionController fusionController = new FusionController();
+			ServicesController servicesController = new ServicesController();
+			GeoLocation local = new GeoLocation(latitude, longitude);
+			Query q = new Query(query);
+			q.geoCode(local, 100.0, Query.KILOMETERS);
+			q.setRpp(100);
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
+			QueryResult result;
+			for (int i = 1; i < 15; i++) {
+				q.setPage(i);
+				result = twitter.search(q);
+				List<Tweet> tweets = result.getTweets();
+				for (Tweet tweet : tweets) {
+					try {
+						Location location = servicesController.findWoeid(tweet
+								.getLocation());
+						fusionController.insert(
+								"2228772",
+								"tweet,Location",
+								"'"+tweet.getText()+"'"+
+								"'"+location.getEndereco()+"'");
+						
+					} catch (Exception e) {
+						System.out.println(tweet.getLocation());
+					}
+				}
+			}
+			
+			return "ok";
+		} catch (TwitterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return "nok";
 	}
 }
