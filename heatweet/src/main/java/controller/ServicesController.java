@@ -18,8 +18,12 @@ public class ServicesController {
 	private final String LATITUDE_TAG_FIM = "</latitude>";
 	private final String LONGITUDE_TAG_INICIO = "<longitude>";
 	private final String LONGITUDE_TAG_FIM = "</longitude>";
+	private final String CITY_TAG_INICIO = "<city>";
+	private final String CITY_TAG_FIM= "</city>";
+	private final String STATE_TAG_INICIO = "<state>";
+	private final String STATE_TAG_FIM= "</state>";
 
-	public Location findWoeid(String busca) {
+	public Location findWoeid(String busca) throws Exception {
 		Location local = new Location();
 
 		try {
@@ -40,7 +44,10 @@ public class ServicesController {
 			int fim = c.indexOf(WOEID_TAG_FIM);
 			String value = c.substring(inicio + WOEID_TAG_INICIO.length(), fim);
 
+		
 			local.setWoeid(Integer.parseInt(value));
+
+			
 
 			inicio = c.indexOf(LATITUDE_TAG_INICIO);
 			fim = c.indexOf(LATITUDE_TAG_FIM);
@@ -53,6 +60,18 @@ public class ServicesController {
 			value = c.substring(inicio + LONGITUDE_TAG_INICIO.length(), fim);
 
 			local.setLongitude(Double.parseDouble(value));
+			
+			inicio = c.indexOf(CITY_TAG_INICIO);
+			fim = c.indexOf(CITY_TAG_FIM);
+			value = c.substring(inicio + CITY_TAG_INICIO.length(), fim);
+			
+			local.setCidade(value);
+			
+			inicio = c.indexOf(STATE_TAG_INICIO);
+			fim = c.indexOf(STATE_TAG_FIM);
+			value = c.substring(inicio + STATE_TAG_INICIO.length(), fim);
+			
+			local.setEstado(value);
 
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
