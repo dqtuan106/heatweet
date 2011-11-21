@@ -235,7 +235,7 @@ public class TwitController {
 								"2228772",
 								"tweet,Location",
 								"'"+tweet.getText()+"'"+
-								"'"+location.getEndereco()+"'");
+								"'"+tweet.getLocation()+"'");
 						
 					} catch (Exception e) {
 						System.out.println(tweet.getLocation());
