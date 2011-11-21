@@ -5,13 +5,14 @@ public class Location {
 	private int woeid;
 	private double latitude;
 	private double longitude;
-	private String vizinhança;
-	private String county;
-	private String cidade;
-	private String estado;
+	private String vizinhanca = "";
+	private String county = "";
+	private String cidade = "";
+	private String estado = "";
 
 	public String getEndereco() {
-		return vizinhança + " " + county + " " + cidade + " " + estado;
+		
+		return vizinhanca + " " + county + " " + cidade + " " + estado;
 	}
 
 	public int getWoeid() {
@@ -63,11 +64,11 @@ public class Location {
 	}
 
 	public String getVizinhança() {
-		return vizinhança;
+		return vizinhanca;
 	}
 
 	public void setVizinhança(String vizinhança) {
-		this.vizinhança = vizinhança;
+		this.vizinhanca = vizinhança;
 	}
 
 }
