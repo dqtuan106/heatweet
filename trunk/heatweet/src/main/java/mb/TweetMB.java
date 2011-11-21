@@ -27,23 +27,31 @@ public class TweetMB {
 	}
 
 	public void findWoeid() {
-		Location local = servicesController.findWoeid(busca);
-		woeid = local.getWoeid();
-		List<Place> places = twitController.findTwitPlaces(busca,
-				local.getLatitude(), local.getLongitude());
-		for (Place place : places) {
-			local = servicesController.findWoeid(place.getName());
-			List<Trend> trends = twitController.searchByLocation(local.getWoeid());
-			System.out.println( place.getName());
-			if(trends.size() > 0) {
-				System.out.println("Trends");
-				for (Trend trend : trends) {
-					System.out.println(trend.getName());
+		try {
+			Location local = servicesController.findWoeid(busca);
+			woeid = local.getWoeid();
+			List<Place> places = twitController.findTwitPlaces(busca,
+					local.getLatitude(), local.getLongitude());
+			for (Place place : places) {
+
+				local = servicesController.findWoeid(place.getName());
+
+				List<Trend> trends = twitController.searchByLocation(local
+						.getWoeid());
+				System.out.println(place.getName());
+				if (trends.size() > 0) {
+					System.out.println("Trends");
+					for (Trend trend : trends) {
+						System.out.println(trend.getName());
+					}
 				}
+
 			}
-			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
+
 	}
 
 	public int getWoeid() {
