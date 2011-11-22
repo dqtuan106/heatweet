@@ -18,14 +18,14 @@ public class ServicesController {
 	private final String LATITUDE_TAG_FIM = "</latitude>";
 	private final String LONGITUDE_TAG_INICIO = "<longitude>";
 	private final String LONGITUDE_TAG_FIM = "</longitude>";
-	private final String NEIGHBORHOOD_TAG_INICIO = "<neighborhood>";	
-	private final String NEIGHBORHOOD_TAG_FIM= "</neighborhood>";
+	private final String NEIGHBORHOOD_TAG_INICIO = "<neighborhood>";
+	private final String NEIGHBORHOOD_TAG_FIM = "</neighborhood>";
 	private final String COUNTY_TAG_INICIO = "<county>";
-	private final String COUNTY_TAG_FIM= "</county>";
+	private final String COUNTY_TAG_FIM = "</county>";
 	private final String CITY_TAG_INICIO = "<city>";
-	private final String CITY_TAG_FIM= "</city>";
+	private final String CITY_TAG_FIM = "</city>";
 	private final String STATE_TAG_INICIO = "<state>";
-	private final String STATE_TAG_FIM= "</state>";
+	private final String STATE_TAG_FIM = "</state>";
 
 	public Location findWoeid(String busca) throws Exception {
 		Location local = new Location();
@@ -43,25 +43,24 @@ public class ServicesController {
 				conteudo.append(line);
 			}
 			String c = null;
-			c = conteudo.toString();			
-			int inicio = c.indexOf(WOEID_TAG_INICIO);
-			int fim = c.indexOf(WOEID_TAG_FIM);
-			String value = c.substring(inicio + WOEID_TAG_INICIO.length(), fim);
+			c = conteudo.toString();
 
-		
-			local.setWoeid(Integer.parseInt(value));
-			
+			local.setWoeid(Integer.parseInt(extraiConteudo(c, WOEID_TAG_INICIO,
+					WOEID_TAG_FIM)));
 
-			local.setLatitude(Double.parseDouble(extraiConteudo(c,LATITUDE_TAG_INICIO,LATITUDE_TAG_FIM)));
-			
-			local.setLongitude(Double.parseDouble(extraiConteudo(c,LONGITUDE_TAG_INICIO,LONGITUDE_TAG_FIM)));
-						
+			local.setLatitude(Double.parseDouble(extraiConteudo(c,
+					LATITUDE_TAG_INICIO, LATITUDE_TAG_FIM)));
+
+			local.setLongitude(Double.parseDouble(extraiConteudo(c,
+					LONGITUDE_TAG_INICIO, LONGITUDE_TAG_FIM)));
+
 			local.setCidade(extraiConteudo(c, CITY_TAG_INICIO, CITY_TAG_FIM));
-			
-			local.setVizinhança(extraiConteudo(c, NEIGHBORHOOD_TAG_INICIO, NEIGHBORHOOD_TAG_INICIO));
-			
-			local.setCounty(extraiConteudo(c, COUNTY_TAG_INICIO,COUNTY_TAG_FIM));
-			
+
+			local.setVizinhança(extraiConteudo(c, NEIGHBORHOOD_TAG_INICIO,
+					NEIGHBORHOOD_TAG_INICIO));
+
+			local.setCounty(extraiConteudo(c, COUNTY_TAG_INICIO, COUNTY_TAG_FIM));
+
 			local.setEstado(extraiConteudo(c, STATE_TAG_INICIO, STATE_TAG_FIM));
 
 		} catch (MalformedURLException e) {
@@ -74,12 +73,17 @@ public class ServicesController {
 
 		return local;
 	}
-	
-	
-	private String extraiConteudo(String c, String tagInicio, String tagFim) {
+
+	private String extraiConteudo(String c, String tagInicio, String tagFim)
+			 {
 		int inicio = c.indexOf(tagInicio);
 		int fim = c.indexOf(tagFim);
-		return c.substring(inicio + tagInicio.length(), fim);
+		try {
+			return c.substring(inicio + tagInicio.length(), fim);
+		} catch (Exception e) {
+			return "0";
+		}
+		
 
 	}
 }
