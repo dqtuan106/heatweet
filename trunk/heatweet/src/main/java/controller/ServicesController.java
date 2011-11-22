@@ -74,8 +74,41 @@ public class ServicesController {
 		return local;
 	}
 
-	private String extraiConteudo(String c, String tagInicio, String tagFim)
-			 {
+	public Location getLatLng(String busca) {
+		Location local = new Location();
+		try {
+			URL url = new URL(
+					"http://where.yahooapis.com/geocode?q="
+							+ URLEncoder.encode(busca, "UTF-8")
+							+ "&appid=dj0yJmk9Y2dYUDVqVDJhRlBnJmQ9WVdrOVZVMVFha2wwTlRBbWNHbzlOamswTlRRME5qWXkmcz1jb25zdW1lcnNlY3JldCZ4PTAy");
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					url.openStream()));
+			String line;
+			StringWriter conteudo = new StringWriter();
+			while ((line = br.readLine()) != null) {
+				conteudo.append(line);
+			}
+			String c = null;
+			c = conteudo.toString();
+			
+			local.setLatitude(Double.parseDouble(extraiConteudo(c,
+					LATITUDE_TAG_INICIO, LATITUDE_TAG_FIM)));
+
+			local.setLongitude(Double.parseDouble(extraiConteudo(c,
+					LONGITUDE_TAG_INICIO, LONGITUDE_TAG_FIM)));
+
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return local;
+
+	}
+
+	private String extraiConteudo(String c, String tagInicio, String tagFim) {
 		int inicio = c.indexOf(tagInicio);
 		int fim = c.indexOf(tagFim);
 		try {
@@ -83,7 +116,6 @@ public class ServicesController {
 		} catch (Exception e) {
 			return "0";
 		}
-		
 
 	}
 }
