@@ -1,14 +1,10 @@
 package controller;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import javax.print.DocFlavor.STRING;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -17,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 
 import model.Location;
 import model.Value;
-
 import twitter4j.GeoLocation;
 import twitter4j.GeoQuery;
 import twitter4j.Place;
@@ -152,6 +147,7 @@ public class TwitController {
 
 	@GET
 	@Path("fusion")
+	@Produces(MediaType.APPLICATION_JSON)
 	public String populateTables(@QueryParam("q") String query,
 			@QueryParam("latitude") double latitude,
 			@QueryParam("longitude") double longitude) {
@@ -166,15 +162,15 @@ public class TwitController {
 			HashMap<String, Integer> twitTrends = new HashMap<String, Integer>();
 			HashMap<String, Location> locations = new HashMap<String, Location>();
 			QueryResult result;
-			for (int i = 1; i < 5; i++) {
+			for (int i = 1; i < 10; i++) {
 				q.setPage(i);
 				result = twitter.search(q);
 				List<Tweet> tweets = result.getTweets();
 				for (Tweet tweet : tweets) {
 					try {
-						Location location = servicesController.findWoeid(tweet
+						Location location = servicesController.getLatLng(tweet
 								.getLocation());
-
+						
 						String chave = location.getEstado()
 								+ location.getCidade();
 						if (!locations.containsKey(chave)) {
@@ -193,7 +189,7 @@ public class TwitController {
 			}
 
 			Set<String> chaves = twitTrends.keySet();
-			for (String chave : chaves) {
+			/*for (String chave : chaves) {
 				fusionController.insert(
 						"2228251",
 						"local,tweets,latitude,longitude",
@@ -201,8 +197,18 @@ public class TwitController {
 								+ twitTrends.get(chave) + ","
 								+ locations.get(chave).getLatitude() + ","
 								+ locations.get(chave).getLongitude());
+			}*/
+			StringBuffer retorno = new StringBuffer();
+			retorno.append("{ points :[");
+			for (String chave : chaves) {
+				retorno.append("{ \"total\" :\""+twitTrends.get(chave)+"\",");
+				retorno.append("\"lat\" :\""+locations.get(chave).getLatitude()+"\",");
+				retorno.append("\"lng\" :\""+locations.get(chave).getLongitude()+"\"},");
+				
 			}
-			return "ok";
+			retorno.substring(0, retorno.length()-1);
+			retorno.append("]}");
+			return retorno.toString();
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -232,9 +238,7 @@ public class TwitController {
 				result = twitter.search(q);
 				List<Tweet> tweets = result.getTweets();
 				for (Tweet tweet : tweets) {
-					
-					
-					 
+															 
 					/*
 					 * fusionController.insert( "2228772", "tweet,Location",
 					 * "'"+tweet.getText()+"'"+ "'"+tweet.getLocation()+"'");
@@ -264,5 +268,7 @@ public class TwitController {
 		}
 
 	}
+	
+	
 
 }

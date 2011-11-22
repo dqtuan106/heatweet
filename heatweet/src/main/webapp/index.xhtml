@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core">
+<h:head>
+	<script type="text/javascript"
+		src="http://maps.google.com/maps/api/js?sensor=false"></script>
+	<script
+		src="http://ajax.googleapis.com/ajax/libs/dojo/1.6.0/dojo/dojo.xd.js"></script>
+
+
+	<script type="text/javascript">
+		var map;
+		var G = google.maps;
+		var geocoder;
+		dojo.ready(initialize);
+		function initialize() {
+			geocoder = new google.maps.Geocoder();
+			var latlng = new google.maps.LatLng(-22.54, -43.13);
+			var myOptions = {
+				zoom : 5,
+				center : latlng,
+				mapTypeId : google.maps.MapTypeId.ROADMAP
+			};
+			map = new google.maps.Map(dojo.byId("map_canvas"), myOptions);
+
+		}
+
+		function codeAddress() {
+			var address = dojo.byId("local").value;
+			geocoder
+					.geocode(
+							{
+								'address' : address
+							},
+							function(results, status) {
+								if (status == google.maps.GeocoderStatus.OK) {
+									var latlng = results[0].geometry.location;
+									var lat = latlng.toString().split(',')[0];
+									lat = lat.substr(1);
+									var lng = latlng.toString().split(',')[1];
+									lng = lng.substr(1, lng.length - 2);
+									carregaDados(lat, lng);
+									var myOptions = {
+										zoom : 6,
+										center : results[0].geometry.location,
+										mapTypeId : google.maps.MapTypeId.ROADMAP
+									};
+									map = new google.maps.Map(dojo
+											.byId("map_canvas"), myOptions);
+									var marker = new google.maps.Marker({
+										map : map,
+										position : results[0].geometry.location
+
+									});
+
+								} else {
+									alert("Geocode was not successful for the following reason: "
+											+ status);
+								}
+							});
+		}
+
+		function circTweets() {
+			var myJsonText = '{ "points" : [ { "total" :"3","lat" :"0.0","lng" :"0.0"},';			
+			myJsonText += '{ "total" :"960","lat" :"-22.787371","lng" :"-43.313"},';
+			myJsonText += '{ "total" :"600","lat" :"-22.06716","lng" :"-42.921206"},';
+			myJsonText += '{ "total" :"350","lat" :"-22.88077","lng" :"-43.103889"},';
+			myJsonText += '{ "total" :"50","lat" :"-22.796749","lng" :"-43.039181"},';
+			myJsonText += '{ "total" :"300","lat" :"34.994515","lng" :"-76.761809"},';
+			myJsonText += '{ "total" :"1","lat" :"-27.60647","lng" :"-54.280001"},';
+			myJsonText += '{ "total" :"550","lat" :"39.464298","lng" :"-9.19603"},';
+			myJsonText += '{ "total" :"803","lat" :"-22.97673","lng" :"-43.19508"}';
+			myJsonText += ']}';
+			
+			var myObj = JSON.parse(myJsonText);
+			var maxPoint = 0;
+			var center;
+			dojo.forEach(myObj.points,function(points) {
+				var latLng = new google.maps.LatLng(points.lat,points.lng);
+				if(points.total > maxPoint) {
+					maxPoint = points.total;
+					center = latLng;
+				}
+				
+				
+	            var circleOptions = {
+	            		center : latLng,
+	            		radius : 5 * points.total   ,
+	            		fillColor : "#4E2F2F",
+	            		strokeColor : "#4E2F2F",
+	            		fillOpacity : points.total /1500
+	            };
+	            var circle = new google.maps.Circle(circleOptions);
+	           
+	            var infoBubble = new google.maps.InfoWindow(); 
+	            var iwOptions = {
+	            	     content: "Total tweets containing: ble =" +  points.total,
+	            	     position:latLng
+	            	    } 
+	            google.maps.event.addListener(circle, 'click', function(){
+	                infoBubble.setOptions(iwOptions);
+	                infoBubble.open(map);
+	              }); 
+	            
+	           
+	           circle.setMap(map);
+	            
+	        });
+			 map.setZoom(8);
+			 map.setCenter(center);
+			
+			
+			
+			
+			
+		}
+	</script>
+	<title>HeaTweet</title>
+</h:head>
+<h:body>
+	<h:form id="frm" prependId="false">
+		<div>
+			<h:outputText value="Busca" />
+			<h:inputText required="true" id="search" />
+			<h:outputText value="Local" />
+			<h:inputText required="true" id="local" />
+			<input type="button" value="procurar" onclick="circTweets()" />
+
+		</div>
+		<div id="map_canvas" style="width: 100%; height: 600px;"></div>
+
+	</h:form>
+</h:body>
+</html>
