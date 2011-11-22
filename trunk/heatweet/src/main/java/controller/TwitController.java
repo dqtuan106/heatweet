@@ -16,6 +16,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import model.Location;
+import model.Value;
 
 import twitter4j.GeoLocation;
 import twitter4j.GeoQuery;
@@ -219,35 +220,49 @@ public class TwitController {
 			ServicesController servicesController = new ServicesController();
 			GeoLocation local = new GeoLocation(latitude, longitude);
 			Query q = new Query(query);
-			q.geoCode(local, 100.0, Query.KILOMETERS);
+			q.geoCode(local, 5000.0, Query.KILOMETERS);
+			q.setResultType(Query.RECENT);
 			q.setRpp(100);
+			fusionController.deleteAll("2228772");
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
-			for (int i = 1; i < 15; i++) {
+			List<Value> values = new ArrayList<Value>();
+			for (int i = 1; i < 5; i++) {
 				q.setPage(i);
 				result = twitter.search(q);
 				List<Tweet> tweets = result.getTweets();
 				for (Tweet tweet : tweets) {
+					
+					
+					 
+					/*
+					 * fusionController.insert( "2228772", "tweet,Location",
+					 * "'"+tweet.getText()+"'"+ "'"+tweet.getLocation()+"'");
+					 */
 					try {
 						Location location = servicesController.findWoeid(tweet
-								.getLocation());
-						fusionController.insert(
-								"2228772",
-								"tweet,Location",
-								"'"+tweet.getText()+"'"+
-								"'"+tweet.getLocation()+"'");
-						
+								 .getLocation());
+						Value value = new Value(tweet.getText().replaceAll("'", ""),
+								location.getLatitude() + " " +location.getLongitude());
+						values.add(value);
 					} catch (Exception e) {
-						System.out.println(tweet.getLocation());
+						System.out.println("PROBLEMA em "+tweet.getText().replaceAll("'", "") +" - " +  tweet.getLocation());
+						e.printStackTrace();
 					}
+
 				}
+				fusionController.batchInsert(values);
 			}
-			
+
 			return "ok";
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return "nok " + e.getErrorMessage();
+
+		} catch (Exception e) {
+			return "nok " + e.getMessage();
 		}
-		return "nok";
+
 	}
+
 }

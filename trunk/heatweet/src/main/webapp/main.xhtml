@@ -10,6 +10,7 @@
 
 
 	<script type="text/javascript">
+
 		var map;
 		var G = google.maps;
 		var geocoder;
@@ -18,30 +19,41 @@
 			geocoder = new google.maps.Geocoder();
 			var latlng = new google.maps.LatLng(-22.54, -43.13);
 			var myOptions = {
-				zoom : 7,
+				zoom : 3,
 				center : latlng,
 				mapTypeId : google.maps.MapTypeId.ROADMAP
 			};
 			map = new google.maps.Map(dojo.byId("map_canvas"), myOptions);
 
+		}
 
-			
-			var layer = new google.maps.FusionTablesLayer({
-			  query: {
-			    /*select: 'local',
-			    from: 2228251*/
-				  select: 'Location',
-		          from: 2228772
-			  },heatmap: {
-				    enabled: true
-			  }
+		function carregaDados(latitude, longitude) {
+			var url = "/heatweet/tweet/carregatweets?q="
+					+ dojo.byId("search").value + "&amp;latitude=" + latitude
+					+ "&amp;longitude=" + longitude;			
+			dojo.xhrGet({
+				url : url,
+				load : function(response) {
+
+						var layer = new google.maps.FusionTablesLayer({
+							query : {
+								select : 'Location',
+								from : 2228772
+							}
+
+						});
+						layer.setMap(map);
+					
+
+					
+
+				}
 
 			});
-			layer.setMap(map);
 
 		}
 		function codeAddress() {
-			var address = dojo.byId("search").value;
+			var address = dojo.byId("local").value;
 			geocoder
 					.geocode(
 							{
@@ -50,10 +62,20 @@
 							function(results, status) {
 								if (status == google.maps.GeocoderStatus.OK) {
 									map.setCenter(results[0].geometry.location);
+									map.setZoom(6);
+									var latlng = results[0].geometry.location;
+									var lat = latlng.toString().split(',')[0];
+									lat = lat.substr(1);
+									var lng = latlng.toString().split(',')[1];
+									lng = lng.substr(1, lng.length - 2);
+									carregaDados(lat, lng);
+
 									var marker = new google.maps.Marker({
 										map : map,
 										position : results[0].geometry.location
+
 									});
+
 								} else {
 									alert("Geocode was not successful for the following reason: "
 											+ status);
@@ -61,20 +83,20 @@
 							});
 		}
 	</script>
-	<title>A Simple JavaServer Faces 2.0 View</title>
+	<title>HeaTweet</title>
 </h:head>
 <h:body>
-	<h:form id="frm" prependId="false">		
+	<h:form id="frm" prependId="false">
 		<div>
-			<h:inputText required="true" id="search" value="#{tweetMB.busca}" />
-			<h:commandButton value="procurar" action="#{tweetMB.findWoeid}"
-				onclick="codeAddress()">
-				<f:ajax render="woeid" execute="@form" />
-			</h:commandButton>
-			<h:inputHidden id="woeid" value="#{tweetMB.woeid}" />
+			<h:outputText value="Busca" />
+			<h:inputText required="true" id="search" />
+			<h:outputText value="Local" />
+			<h:inputText required="true" id="local" />
+			<input type="button" value="procurar" onclick="codeAddress()" />
+
 		</div>
-		<div id="map_canvas" style="width: 800px; height: 500px;"></div>
-		<div id="retorno"></div>
+		<div id="map_canvas" style="width: 100%; height: 600px;"></div>
+
 	</h:form>
 </h:body>
 </html>
