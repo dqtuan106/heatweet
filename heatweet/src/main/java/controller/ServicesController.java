@@ -2,14 +2,31 @@ package controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import model.Location;
 
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+@Path(value = "services")
 public class ServicesController {
 
 	private final String WOEID_TAG_INICIO = "<woeid>";
@@ -74,6 +91,7 @@ public class ServicesController {
 		return local;
 	}
 
+	
 	public Location getLatLng(String busca) {
 		Location local = new Location();
 		try {
@@ -90,7 +108,7 @@ public class ServicesController {
 			}
 			String c = null;
 			c = conteudo.toString();
-			
+
 			local.setLatitude(Double.parseDouble(extraiConteudo(c,
 					LATITUDE_TAG_INICIO, LATITUDE_TAG_FIM)));
 
@@ -106,6 +124,54 @@ public class ServicesController {
 		}
 		return local;
 
+	}
+
+	public Location geocodeEndereco(@QueryParam("endereco") String endereco) {
+		Location local = new Location();
+		try {
+			URL url = new URL(
+					"http://maps.google.com/maps/api/geocode/xml?address="
+							+ URLEncoder.encode(endereco, "UTF-8")+"&sensor=false");
+			
+			DocumentBuilderFactory domFactory = DocumentBuilderFactory
+					.newInstance();
+			domFactory.setNamespaceAware(true);
+			DocumentBuilder builder = domFactory.newDocumentBuilder();
+			InputStream is = url.openStream();
+			Document doc = builder.parse(is);
+			
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			XPathExpression expr = xpath.compile("//location/lat");
+			String lat = expr.evaluate(doc);
+			local.setLatitude(Double.parseDouble(lat));
+			
+			expr = xpath.compile("//location/lng");
+			String lng = expr.evaluate(doc);
+			local.setLongitude(Double.parseDouble(lng));
+			
+			return local;
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new Location();
+	
 	}
 
 	private String extraiConteudo(String c, String tagInicio, String tagFim) {

@@ -40,7 +40,7 @@
 									lat = lat.substr(1);
 									var lng = latlng.toString().split(',')[1];
 									lng = lng.substr(1, lng.length - 2);
-									carregaDados(lat, lng);
+									circTweets(lat, lng);
 									var myOptions = {
 										zoom : 6,
 										center : results[0].geometry.location,
@@ -61,8 +61,54 @@
 							});
 		}
 
-		function circTweets() {
-			var myJsonText = '{ "points" : [ { "total" :"3","lat" :"0.0","lng" :"0.0"},';			
+		function circTweets(latitude, longitude) {
+			var url = "/heatweet/tweet/maxtweets?q="
+					+ dojo.byId("search").value + "&amp;latitude=" + latitude
+					+ "&amp;longitude=" + longitude + "&amp;r="
+					+ dojo.byId("raio").value;
+			dojo.xhrGet({
+				url : url,
+				load : function(response) {
+					
+					var myObj = JSON.parse(response);
+					var maxPoint = 0;
+					var center;
+					dojo.forEach(myObj.points, function(points) {
+						var latLng = new google.maps.LatLng(points.lat, points.lng);
+						if (points.total > maxPoint) {
+							maxPoint = points.total;
+							center = latLng;
+						}
+
+						var circleOptions = {
+							center : latLng,
+							radius : (10-map.getZoom()) * points.total,
+							fillColor : "#4E2F2F",
+							strokeColor : "#4E2F2F",
+							fillOpacity : points.total / 1500
+						};
+						var circle = new google.maps.Circle(circleOptions);
+
+						var infoBubble = new google.maps.InfoWindow();
+						var iwOptions = {
+							content : "Total tweets containing: ble =" + points.total,
+							position : latLng
+						}
+						google.maps.event.addListener(circle, 'click', function() {
+							infoBubble.setOptions(iwOptions);
+							infoBubble.open(map);
+						});
+
+						circle.setMap(map);
+
+					});
+					map.setZoom(8);
+					map.setCenter(center);
+
+
+				}
+			});
+			/* var myJsonText = '{ "points" : [ { "total" :"3","lat" :"0.0","lng" :"0.0"},';
 			myJsonText += '{ "total" :"960","lat" :"-22.787371","lng" :"-43.313"},';
 			myJsonText += '{ "total" :"600","lat" :"-22.06716","lng" :"-42.921206"},';
 			myJsonText += '{ "total" :"350","lat" :"-22.88077","lng" :"-43.103889"},';
@@ -71,48 +117,8 @@
 			myJsonText += '{ "total" :"1","lat" :"-27.60647","lng" :"-54.280001"},';
 			myJsonText += '{ "total" :"550","lat" :"39.464298","lng" :"-9.19603"},';
 			myJsonText += '{ "total" :"803","lat" :"-22.97673","lng" :"-43.19508"}';
-			myJsonText += ']}';
-			
-			var myObj = JSON.parse(myJsonText);
-			var maxPoint = 0;
-			var center;
-			dojo.forEach(myObj.points,function(points) {
-				var latLng = new google.maps.LatLng(points.lat,points.lng);
-				if(points.total > maxPoint) {
-					maxPoint = points.total;
-					center = latLng;
-				}
-				
-				
-	            var circleOptions = {
-	            		center : latLng,
-	            		radius : 5 * points.total   ,
-	            		fillColor : "#4E2F2F",
-	            		strokeColor : "#4E2F2F",
-	            		fillOpacity : points.total /1500
-	            };
-	            var circle = new google.maps.Circle(circleOptions);
-	           
-	            var infoBubble = new google.maps.InfoWindow(); 
-	            var iwOptions = {
-	            	     content: "Total tweets containing: ble =" +  points.total,
-	            	     position:latLng
-	            	    } 
-	            google.maps.event.addListener(circle, 'click', function(){
-	                infoBubble.setOptions(iwOptions);
-	                infoBubble.open(map);
-	              }); 
-	            
-	           
-	           circle.setMap(map);
-	            
-	        });
-			 map.setZoom(8);
-			 map.setCenter(center);
-			
-			
-			
-			
+			myJsonText += ']}';*/
+
 			
 		}
 	</script>
@@ -123,9 +129,11 @@
 		<div>
 			<h:outputText value="Busca" />
 			<h:inputText required="true" id="search" />
+			<h:outputText value="Raio" />
+			<h:inputText required="true" id="raio" />
 			<h:outputText value="Local" />
 			<h:inputText required="true" id="local" />
-			<input type="button" value="procurar" onclick="circTweets()" />
+			<input type="button" value="procurar" onclick="codeAddress()" />
 
 		</div>
 		<div id="map_canvas" style="width: 100%; height: 600px;"></div>
