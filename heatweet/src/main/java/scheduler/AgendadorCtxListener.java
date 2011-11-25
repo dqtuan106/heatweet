@@ -19,7 +19,17 @@ public class AgendadorCtxListener implements ServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
 		// TODO Auto-generated method stub
+		SchedulerFactory sf = new StdSchedulerFactory();
+		Scheduler sched;
 
+		try {
+			sched = sf.getScheduler();
+
+			sched.shutdown();
+		} catch (SchedulerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -39,9 +49,9 @@ public class AgendadorCtxListener implements ServletContextListener {
 					.startNow()
 					.withSchedule(
 							simpleSchedule().withIntervalInMinutes(30)
-									.repeatMinutelyForTotalCount(48)).build();
-			
-			sched.scheduleJob(job,trigger);
+									.repeatForever()).build();
+
+			sched.scheduleJob(job, trigger);
 
 			sched.start();
 		} catch (SchedulerException e) {

@@ -91,7 +91,126 @@ public class ServicesController {
 		return local;
 	}
 
-	
+	public Location geocodeYahoo(String endereco) {
+		Location local = new Location();
+		try {
+			URL url = new URL(
+					"http://where.yahooapis.com/geocode?q="
+							+ URLEncoder.encode(endereco, "UTF-8")
+							+ "&appid=dj0yJmk9Y2dYUDVqVDJhRlBnJmQ9WVdrOVZVMVFha2wwTlRBbWNHbzlOamswTlRRME5qWXkmcz1jb25zdW1lcnNlY3JldCZ4PTAy");
+
+			DocumentBuilderFactory domFactory = DocumentBuilderFactory
+					.newInstance();
+			domFactory.setNamespaceAware(true);
+			DocumentBuilder builder = domFactory.newDocumentBuilder();
+			InputStream is = url.openStream();
+			Document doc = builder.parse(is);
+
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			XPathExpression expr = xpath.compile("//Erro");
+			String status = expr.evaluate(doc);
+			if (status.equals("0")) {
+
+				expr = xpath.compile("//latitude");
+				String lat = expr.evaluate(doc);
+				local.setLatitude(Double.parseDouble(lat));
+
+				expr = xpath.compile("//longitude");
+				String lng = expr.evaluate(doc);
+				local.setLongitude(Double.parseDouble(lng));
+
+				return local;
+			} else {
+				System.out.println(status);
+			}
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+
+			System.out.println(endereco);
+		}
+
+		return null;
+
+	}
+
+	public Location geocodeEndereco( String endereco) {
+		Location local = new Location();
+		try {
+			URL url = new URL(
+					"http://maps.google.com/maps/api/geocode/xml?address="
+							+ URLEncoder.encode(endereco, "UTF-8")
+							+ "&sensor=false");
+
+			DocumentBuilderFactory domFactory = DocumentBuilderFactory
+					.newInstance();
+			domFactory.setNamespaceAware(true);
+			DocumentBuilder builder = domFactory.newDocumentBuilder();
+			InputStream is = url.openStream();
+			Document doc = builder.parse(is);
+
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			XPathExpression expr = xpath.compile("//status");
+			String status = expr.evaluate(doc);
+			if (status.equals("OK")) {
+
+				expr = xpath.compile("//location/lat");
+				String lat = expr.evaluate(doc);
+				local.setLatitude(Double.parseDouble(lat));
+
+				expr = xpath.compile("//location/lng");
+				String lng = expr.evaluate(doc);
+				local.setLongitude(Double.parseDouble(lng));
+
+				return local;
+			} else {
+				System.out.println(status);
+			}
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+
+			System.out.println(endereco);
+		}
+
+		return null;
+	}
 	public Location getLatLng(String busca) {
 		Location local = new Location();
 		try {
@@ -126,54 +245,7 @@ public class ServicesController {
 
 	}
 
-	public Location geocodeEndereco(@QueryParam("endereco") String endereco) {
-		Location local = new Location();
-		try {
-			URL url = new URL(
-					"http://maps.google.com/maps/api/geocode/xml?address="
-							+ URLEncoder.encode(endereco, "UTF-8")+"&sensor=false");
-			
-			DocumentBuilderFactory domFactory = DocumentBuilderFactory
-					.newInstance();
-			domFactory.setNamespaceAware(true);
-			DocumentBuilder builder = domFactory.newDocumentBuilder();
-			InputStream is = url.openStream();
-			Document doc = builder.parse(is);
-			
-			XPath xpath = XPathFactory.newInstance().newXPath();
-			XPathExpression expr = xpath.compile("//location/lat");
-			String lat = expr.evaluate(doc);
-			local.setLatitude(Double.parseDouble(lat));
-			
-			expr = xpath.compile("//location/lng");
-			String lng = expr.evaluate(doc);
-			local.setLongitude(Double.parseDouble(lng));
-			
-			return local;
-			
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (XPathExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return new Location();
 	
-	}
-
 	private String extraiConteudo(String c, String tagInicio, String tagFim) {
 		int inicio = c.indexOf(tagInicio);
 		int fim = c.indexOf(tagFim);

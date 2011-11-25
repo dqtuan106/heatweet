@@ -1,8 +1,11 @@
 package controller;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import javax.ws.rs.GET;
@@ -256,7 +259,7 @@ public class TwitController {
 						 */
 						Long tempoInicio = System.currentTimeMillis();
 						Location location = servicesController
-								.geocodeEndereco(tweet.getLocation());
+								.geocodeYahoo(tweet.getLocation().replace("?", ""));
 						Long tempoFim = System.currentTimeMillis();
 						Long tempoExecucao = tempoFim - tempoInicio;
 						tempoTotal += tempoExecucao;
@@ -298,13 +301,13 @@ public class TwitController {
 			GeoLocation local = new GeoLocation(latitude, longitude);
 			Query q = new Query(query);
 			q.geoCode(local, raio, Query.KILOMETERS);
-			q.setResultType(Query.RECENT);
-			q.setRpp(100);
-			fusionController.deleteAll("2228856");
+			GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("America/Sao_Paulo"));			
+			q.setRpp(100);			
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
 			List<Value> values = new ArrayList<Value>();
-			Long tempoTotal = new Long(0);
+			List<Value> exceptions = new ArrayList<Value>();
+ 			Long tempoTotal = new Long(0);
 			for (int i = 1; i < 15; i++) {
 				q.setPage(i);
 				result = twitter.search(q);
@@ -325,31 +328,40 @@ public class TwitController {
 						if(tweet.getGeoLocation() != null) {
 							location.setLatitude(tweet.getGeoLocation().getLatitude());
 							location.setLongitude(tweet.getGeoLocation().getLongitude());
-						} else {							
-								
+						} else {
+							
 								location = servicesController
-										.geocodeEndereco(tweet.getLocation());
+										.geocodeYahoo(tweet.getLocation().replace("?", ""));
 							
 													
 							
 						}
-	
-						Long tempoFim = System.currentTimeMillis();
-						Long tempoExecucao = tempoFim - tempoInicio;
-						tempoTotal += tempoExecucao;
-						Value value = new Value(tweet.getText().replaceAll("'",
-								""), location.getLatitude() + " "
-								+ location.getLongitude());
-						values.add(value);
+						if(location !=null) {
+							Long tempoFim = System.currentTimeMillis();
+							Long tempoExecucao = tempoFim - tempoInicio;
+							tempoTotal += tempoExecucao;
+							Value value = new Value(tweet.getText().replace("'",
+									"").replace("?", ""), location.getLatitude() + " "
+									+ location.getLongitude());
+							values.add(value);
+						} else {
+							Value v = new Value(tweet.getText().replace("'",
+									"").replace("?", ""), "0 0");
+							
+							exceptions.add(v);
+						
+						}
+						
 					} catch (Exception e) {
 						System.out.println("PROBLEMA em "
 								+ tweet.getText().replaceAll("'", "") + " - "
-								+ tweet.getLocation());
+								+ tweet.getLocation().replace("?", ""));
 						e.printStackTrace();
 					}
 
 				}
-				fusionController.batchInsert("2228856",values);
+				fusionController.batchInsert("2228856",values,cal);
+				fusionController.batchInsert("2264505",exceptions,cal);
 			}
 
 			return "ok tempo total de execução de geocoding :" + tempoTotal+" ms";

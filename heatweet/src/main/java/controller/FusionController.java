@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.TimeZone;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
@@ -196,7 +197,7 @@ public class FusionController {
 		return "NOK";
 	}
 
-	public String batchInsert(String table,List<Value> values) {
+	public String batchInsert(String table,List<Value> values,Calendar cal) {
 
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
@@ -210,15 +211,16 @@ public class FusionController {
 			writer = new OutputStreamWriter(request.getRequestStream());
 			writer.append("sql=");
 			Iterator<Value> iter = values.iterator();
-			GregorianCalendar cal = new GregorianCalendar();
+			
 			String data = cal.get(Calendar.DAY_OF_MONTH) +"/" +cal.get(Calendar.MONTH)+"/"+cal.get(Calendar.YEAR);
+			String hora = cal.get(Calendar.HOUR_OF_DAY)+":"+ cal.get(Calendar.MINUTE);
 			while (iter.hasNext()) {
 				Value value = iter.next();
 				
 				String q =URLEncoder.encode(
-						"INSERT INTO "+table +" (Text,Location,Date) VALUES (' "
-								+ value.getTweet().replaceAll("'", "") + " ','" + value.getLocation()
-								+ "',"+data+");" , "UTF-8");
+						"INSERT INTO "+table +" (Text,Location,Date) VALUES ('"
+								+ value.getTweet().replace("'", "") + "','" + value.getLocation()
+								+ "','"+data+" "+hora+"');" , "UTF-8");
 				
 				writer.append(q);
 			}
