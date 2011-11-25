@@ -173,7 +173,7 @@ public class TwitController {
 				for (Tweet tweet : tweets) {
 					try {
 						Location location = servicesController.getLatLng(tweet
-								.getLocation());
+								.getLocation().replace("?", ""));
 
 						String chave = location.getEstado()
 								+ location.getCidade();
