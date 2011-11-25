@@ -1,7 +1,6 @@
 package controller;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -326,13 +325,15 @@ public class TwitController {
 						if(tweet.getGeoLocation() != null) {
 							location.setLatitude(tweet.getGeoLocation().getLatitude());
 							location.setLongitude(tweet.getGeoLocation().getLongitude());
-						} else {
-							GeoQuery gq = new GeoQuery(tweet.getLocation());
-							location.setLatitude(gq.getLocation().getLatitude());
-							location.setLongitude(gq.getLocation().getLongitude());
+						} else {							
+								
+								location = servicesController
+										.geocodeEndereco(tweet.getLocation());
+							
+													
+							
 						}
-						/*location = servicesController
-								.geocodeEndereco(tweet.getLocation());*/
+	
 						Long tempoFim = System.currentTimeMillis();
 						Long tempoExecucao = tempoFim - tempoInicio;
 						tempoTotal += tempoExecucao;
