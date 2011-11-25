@@ -5,6 +5,8 @@ import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
@@ -159,7 +161,7 @@ public class FusionController {
 						"INSERT INTO 2228772 (tweet,Location) VALUES (' "
 								+ value.getTweet() + " ','" + value.getLocation()
 								+ "');", "UTF-8");
-				System.out.println(q);
+				
 				writer.append(q);
 			}
 			
@@ -194,6 +196,63 @@ public class FusionController {
 		return "NOK";
 	}
 
+	public String batchInsert(String table,List<Value> values) {
+
+		try {
+			this.url = new URL(FUSION_SERVICE_URL);
+
+			authenticate();
+			GDataRequest request = service.getRequestFactory().getRequest(
+					RequestType.INSERT, this.url,
+					new ContentType("application/x-www-form-urlencoded"));
+			OutputStreamWriter writer;
+
+			writer = new OutputStreamWriter(request.getRequestStream());
+			writer.append("sql=");
+			Iterator<Value> iter = values.iterator();
+			GregorianCalendar cal = new GregorianCalendar();
+			String data = cal.get(Calendar.DAY_OF_MONTH) +"/" +cal.get(Calendar.MONTH)+"/"+cal.get(Calendar.YEAR);
+			while (iter.hasNext()) {
+				Value value = iter.next();
+				
+				String q =URLEncoder.encode(
+						"INSERT INTO "+table +" (Text,Location,Date) VALUES (' "
+								+ value.getTweet().replaceAll("'", "") + " ','" + value.getLocation()
+								+ "',"+data+");" , "UTF-8");
+				
+				writer.append(q);
+			}
+			
+			writer.flush();
+
+			request.execute();
+
+			String decoded = new String();
+			Scanner scanner = new Scanner(request.getResponseStream(), "UTF-8");
+			while (scanner.hasNextLine()) {
+				scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0);
+				MatchResult match = scanner.match();
+				String quotedString = match.group(2);
+				decoded = quotedString == null ? match.group(1) : quotedString
+						.replaceAll("\"\"", "\"");
+				System.out.print("|" + decoded);
+				if (!match.group(4).equals(",")) {
+					System.out.println("|");
+				}
+			}
+			return decoded;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AuthenticationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "NOK";
+	}
 	@GET
 	@Path(value = "deleteAll")
 	public String deleteAll(@QueryParam("table") String table) {

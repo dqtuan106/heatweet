@@ -224,6 +224,7 @@ public class TwitController {
 	@GET
 	@Path("carregatweets")
 	public String carregaTweets(@QueryParam("q") String query,
+			@QueryParam("r") double raio,
 			@QueryParam("latitude") double latitude,
 			@QueryParam("longitude") double longitude) {
 		try {
@@ -231,13 +232,14 @@ public class TwitController {
 			ServicesController servicesController = new ServicesController();
 			GeoLocation local = new GeoLocation(latitude, longitude);
 			Query q = new Query(query);
-			q.geoCode(local, 500.0, Query.KILOMETERS);
+			q.geoCode(local, raio, Query.KILOMETERS);
 			q.setResultType(Query.RECENT);
 			q.setRpp(100);
 			fusionController.deleteAll("2228772");
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
 			List<Value> values = new ArrayList<Value>();
+			Long tempoTotal = new Long(0);
 			for (int i = 1; i < 5; i++) {
 				q.setPage(i);
 				result = twitter.search(q);
@@ -253,8 +255,12 @@ public class TwitController {
 						 * Location location =
 						 * servicesController.findWoeid(tweet .getLocation());
 						 */
+						Long tempoInicio = System.currentTimeMillis();
 						Location location = servicesController
 								.geocodeEndereco(tweet.getLocation());
+						Long tempoFim = System.currentTimeMillis();
+						Long tempoExecucao = tempoFim - tempoInicio;
+						tempoTotal += tempoExecucao;
 						Value value = new Value(tweet.getText().replaceAll("'",
 								""), location.getLatitude() + " "
 								+ location.getLongitude());
@@ -270,7 +276,7 @@ public class TwitController {
 				fusionController.batchInsert(values);
 			}
 
-			return "ok";
+			return "ok tempo total de execução de geocoding :" + tempoTotal+" ms";
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			return "nok " + e.getErrorMessage();
@@ -281,4 +287,78 @@ public class TwitController {
 
 	}
 
+	@GET
+	@Path("carrega")
+	public String carrega(@QueryParam("q") String query,
+			@QueryParam("r") double raio,
+			@QueryParam("latitude") double latitude,
+			@QueryParam("longitude") double longitude) {
+		try {
+			FusionController fusionController = new FusionController();
+			ServicesController servicesController = new ServicesController();
+			GeoLocation local = new GeoLocation(latitude, longitude);
+			Query q = new Query(query);
+			q.geoCode(local, raio, Query.KILOMETERS);
+			q.setResultType(Query.RECENT);
+			q.setRpp(100);
+			fusionController.deleteAll("2228856");
+			Twitter twitter = TwitterBuilderFactory.getTwitter();
+			QueryResult result;
+			List<Value> values = new ArrayList<Value>();
+			Long tempoTotal = new Long(0);
+			for (int i = 1; i < 15; i++) {
+				q.setPage(i);
+				result = twitter.search(q);
+				List<Tweet> tweets = result.getTweets();
+				for (Tweet tweet : tweets) {
+
+					/*
+					 * fusionController.insert( "2228772", "tweet,Location",
+					 * "'"+tweet.getText()+"'"+ "'"+tweet.getLocation()+"'");
+					 */
+					try {
+						/*
+						 * Location location =
+						 * servicesController.findWoeid(tweet .getLocation());
+						 */
+						Long tempoInicio = System.currentTimeMillis();
+						Location location = new Location();
+						if(tweet.getGeoLocation() != null) {
+							location.setLatitude(tweet.getGeoLocation().getLatitude());
+							location.setLongitude(tweet.getGeoLocation().getLongitude());
+						} else {
+							GeoQuery gq = new GeoQuery(tweet.getLocation());
+							location.setLatitude(gq.getLocation().getLatitude());
+							location.setLongitude(gq.getLocation().getLongitude());
+						}
+						/*location = servicesController
+								.geocodeEndereco(tweet.getLocation());*/
+						Long tempoFim = System.currentTimeMillis();
+						Long tempoExecucao = tempoFim - tempoInicio;
+						tempoTotal += tempoExecucao;
+						Value value = new Value(tweet.getText().replaceAll("'",
+								""), location.getLatitude() + " "
+								+ location.getLongitude());
+						values.add(value);
+					} catch (Exception e) {
+						System.out.println("PROBLEMA em "
+								+ tweet.getText().replaceAll("'", "") + " - "
+								+ tweet.getLocation());
+						e.printStackTrace();
+					}
+
+				}
+				fusionController.batchInsert("2228856",values);
+			}
+
+			return "ok tempo total de execução de geocoding :" + tempoTotal+" ms";
+		} catch (TwitterException e) {
+			// TODO Auto-generated catch block
+			return "nok " + e.getErrorMessage();
+
+		} catch (Exception e) {
+			return "nok " + e.getMessage();
+		}
+
+	}
 }
