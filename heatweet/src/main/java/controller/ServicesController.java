@@ -218,31 +218,64 @@ public class ServicesController {
 					"http://where.yahooapis.com/geocode?q="
 							+ URLEncoder.encode(busca, "UTF-8")
 							+ "&appid=dj0yJmk9Y2dYUDVqVDJhRlBnJmQ9WVdrOVZVMVFha2wwTlRBbWNHbzlOamswTlRRME5qWXkmcz1jb25zdW1lcnNlY3JldCZ4PTAy");
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					url.openStream()));
-			String line;
-			StringWriter conteudo = new StringWriter();
-			while ((line = br.readLine()) != null) {
-				conteudo.append(line);
+			DocumentBuilderFactory domFactory = DocumentBuilderFactory
+					.newInstance();
+			domFactory.setNamespaceAware(true);
+			DocumentBuilder builder = domFactory.newDocumentBuilder();
+			InputStream is = url.openStream();
+			Document doc = builder.parse(is);
+
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			XPathExpression expr = xpath.compile("//Erro");
+			String status = expr.evaluate(doc);
+			if (status.equals("0")) {
+
+				expr = xpath.compile("//latitude");
+				String lat = expr.evaluate(doc);
+				local.setLatitude(Double.parseDouble(lat));
+
+				expr = xpath.compile("//longitude");
+				String lng = expr.evaluate(doc);
+				local.setLongitude(Double.parseDouble(lng));
+				
+				expr = xpath.compile("//state");
+				String estado = expr.evaluate(doc);
+				local.setEstado(estado);
+				
+				expr = xpath.compile("//city");
+				String cidade = expr.evaluate(doc);
+				local.setCidade(cidade);
+				
+				
+
+				return local;
+			} else {
+				System.out.println(status);
 			}
-			String c = null;
-			c = conteudo.toString();
-
-			local.setLatitude(Double.parseDouble(extraiConteudo(c,
-					LATITUDE_TAG_INICIO, LATITUDE_TAG_FIM)));
-
-			local.setLongitude(Double.parseDouble(extraiConteudo(c,
-					LONGITUDE_TAG_INICIO, LONGITUDE_TAG_FIM)));
-
+			
 		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+			
 		}
-		return local;
-
+		return null;
 	}
 
 	
