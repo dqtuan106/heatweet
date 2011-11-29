@@ -3,6 +3,7 @@ package controller;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 
 import model.Location;
 import model.Value;
+import store.PlaceStore;
 import twitter4j.GeoLocation;
 import twitter4j.GeoQuery;
 import twitter4j.Place;
@@ -160,11 +162,11 @@ public class TwitController {
 			ServicesController servicesController = new ServicesController();
 			GeoLocation local = new GeoLocation(latitude, longitude);
 			Query q = new Query(query);
-			q.geoCode(local, raio , Query.KILOMETERS);
+			q.geoCode(local, raio, Query.KILOMETERS);
 			q.setRpp(100);
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
-			TreeMap<String, Integer> twitTrends = new TreeMap<String, Integer>();
-			TreeMap<String, Location> locations = new TreeMap<String, Location>();
+			HashMap<String, Integer> twitTrends = new HashMap<String, Integer>();
+			HashMap<String, Location> locations = new HashMap<String, Location>();
 			QueryResult result;
 			for (int i = 1; i < 15; i++) {
 				q.setPage(i);
@@ -172,7 +174,9 @@ public class TwitController {
 				List<Tweet> tweets = result.getTweets();
 				for (Tweet tweet : tweets) {
 					try {
-						Location location = servicesController.getLatLng(tweet
+						Location location;
+
+						location = servicesController.getLatLng(tweet
 								.getLocation().replace("?", ""));
 
 						String chave = location.getEstado()
@@ -210,11 +214,10 @@ public class TwitController {
 				retorno.append("\"lng\" : \""
 						+ locations.get(chave).getLongitude() + "\"} ,");
 
-			}		
-			retorno.delete(retorno.length() -1, retorno.length());
+			}
+			retorno.delete(retorno.length() - 1, retorno.length());
 			retorno.append("]}");
 
-			
 			return retorno.toString();
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
@@ -259,7 +262,8 @@ public class TwitController {
 						 */
 						Long tempoInicio = System.currentTimeMillis();
 						Location location = servicesController
-								.geocodeYahoo(tweet.getLocation().replace("?", ""));
+								.geocodeYahoo(tweet.getLocation().replace("?",
+										""));
 						Long tempoFim = System.currentTimeMillis();
 						Long tempoExecucao = tempoFim - tempoInicio;
 						tempoTotal += tempoExecucao;
@@ -278,7 +282,8 @@ public class TwitController {
 				fusionController.batchInsert(values);
 			}
 
-			return "ok tempo total de execução de geocoding :" + tempoTotal+" ms";
+			return "ok tempo total de execução de geocoding :" + tempoTotal
+					+ " ms";
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			return "nok " + e.getErrorMessage();
@@ -301,13 +306,14 @@ public class TwitController {
 			GeoLocation local = new GeoLocation(latitude, longitude);
 			Query q = new Query(query);
 			q.geoCode(local, raio, Query.KILOMETERS);
-			GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("America/Sao_Paulo"));			
-			q.setRpp(100);			
+			GregorianCalendar cal = new GregorianCalendar(
+					TimeZone.getTimeZone("America/Sao_Paulo"));
+			q.setRpp(100);
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
 			List<Value> values = new ArrayList<Value>();
 			List<Value> exceptions = new ArrayList<Value>();
- 			Long tempoTotal = new Long(0);
+			Long tempoTotal = new Long(0);
 			for (int i = 1; i < 15; i++) {
 				q.setPage(i);
 				result = twitter.search(q);
@@ -325,33 +331,29 @@ public class TwitController {
 						 */
 						Long tempoInicio = System.currentTimeMillis();
 						Location location = new Location();
-						if(tweet.getGeoLocation() != null) {
-							location.setLatitude(tweet.getGeoLocation().getLatitude());
-							location.setLongitude(tweet.getGeoLocation().getLongitude());
-						} else {
-							
-								location = servicesController
-										.geocodeYahoo(tweet.getLocation().replace("?", ""));
-							
-													
-							
-						}
-						if(location !=null) {
+						Value value;
+						/*if (tweet.getGeoLocation() != null) {
+							location.setLatitude(tweet.getGeoLocation()
+									.getLatitude());
+							location.setLongitude(tweet.getGeoLocation()
+									.getLongitude());
+
 							Long tempoFim = System.currentTimeMillis();
 							Long tempoExecucao = tempoFim - tempoInicio;
 							tempoTotal += tempoExecucao;
-							Value value = new Value(tweet.getText().replace("'",
-									"").replace("?", ""), location.getLatitude() + " "
-									+ location.getLongitude());
+
+							value = new Value(tweet.getText().replace("'", "")
+									.replace("?", ""), location.getLatitude()
+									+ " " + location.getLongitude());
+
 							values.add(value);
-						} else {
-							Value v = new Value(tweet.getText().replace("'",
-									"").replace("?", ""), "0 0");
-							
-							exceptions.add(v);
-						
-						}
-						
+						} else {*/
+							value = new Value(tweet.getText().replace("'", "")
+									.replace("?", ""), tweet.getLocation()
+									.replace("'", "").replace("?", ""));
+							values.add(value);
+						//}
+
 					} catch (Exception e) {
 						System.out.println("PROBLEMA em "
 								+ tweet.getText().replaceAll("'", "") + " - "
@@ -360,11 +362,12 @@ public class TwitController {
 					}
 
 				}
-				fusionController.batchInsert("2228856",values,cal);
-				fusionController.batchInsert("2264505",exceptions,cal);
+				fusionController.batchInsert("2228856", values, cal);
+				
 			}
 
-			return "ok tempo total de execução de geocoding :" + tempoTotal+" ms";
+			return "ok tempo total de execução de geocoding :" + tempoTotal
+					+ " ms";
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			return "nok " + e.getErrorMessage();
