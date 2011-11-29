@@ -16,7 +16,9 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 import model.Value;
 
@@ -301,5 +303,51 @@ public class FusionController {
 		}
 		return "NOK";
 
+	}
+	
+	@GET
+	@Path(value="selectByLocation") 
+	@Produces(MediaType.APPLICATION_JSON)
+	public String selectByLocation(@QueryParam("table") String table){
+		try {
+			String query ="?sql="+ URLEncoder.encode("SELECT Location, count(location) FROM " + table +" GROUP BY Location", "UTF-8");
+		this.url = new URL(FUSION_SERVICE_URL+ query);
+
+		authenticate();
+		
+			GDataRequest request = service.getRequestFactory().getRequest(RequestType.QUERY, this.url ,
+					ContentType.TEXT_PLAIN);
+		
+		OutputStreamWriter writer;
+		
+		writer = new OutputStreamWriter(request.getRequestStream());
+
+				
+
+		request.execute();
+		
+		String decoded = new String();
+		Scanner scanner = new Scanner(request.getResponseStream(), "UTF-8");
+		while (scanner.hasNextLine()) {
+			scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0);
+			MatchResult match = scanner.match();
+			String quotedString = match.group(2);
+			decoded = quotedString == null ? match.group(1) : quotedString
+					.replaceAll("\"\"", "\"");
+			System.out.print("|" + decoded);
+			if (!match.group(4).equals(",")) {
+				System.out.println("|");
+			}
+		}
+		return decoded;
+		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
 	}
 }

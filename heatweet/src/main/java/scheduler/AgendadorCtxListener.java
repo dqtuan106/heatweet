@@ -48,8 +48,8 @@ public class AgendadorCtxListener implements ServletContextListener {
 					.withIdentity("agendarCarregamentoTrigger", "tweets")
 					.startNow()
 					.withSchedule(
-							simpleSchedule().withIntervalInMinutes(30)
-									.repeatForever()).build();
+							simpleSchedule().repeatMinutelyForTotalCount(48, 30)
+									).build();
 
 			sched.scheduleJob(job, trigger);
 

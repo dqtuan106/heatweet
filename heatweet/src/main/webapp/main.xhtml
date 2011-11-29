@@ -29,7 +29,7 @@
 
 		function carregaDados(latitude, longitude) {
 			var url = "/heatweet/tweet/carregatweets?q="
-					+ dojo.byId("search").value + "&amp;latitude=" + latitude
+					+ dojo.byId("search").value + "&amp;r=500&amp;latitude=" + latitude
 					+ "&amp;longitude=" + longitude;			
 			dojo.xhrGet({
 				url : url,
