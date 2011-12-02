@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 
 import model.Location;
 import model.Value;
+import store.LastTweetStore;
 import store.PlaceStore;
 import twitter4j.GeoLocation;
 import twitter4j.GeoQuery;
@@ -309,6 +310,11 @@ public class TwitController {
 			GregorianCalendar cal = new GregorianCalendar(
 					TimeZone.getTimeZone("America/Sao_Paulo"));
 			q.setRpp(100);
+			Long tweetId = LastTweetStore.getTweetIds().get(query);
+			if(tweetId != null) {
+				q.setSinceId(tweetId);
+			}
+			
 			Twitter twitter = TwitterBuilderFactory.getTwitter();
 			QueryResult result;
 			List<Value> values = new ArrayList<Value>();
@@ -352,6 +358,7 @@ public class TwitController {
 									.replace("?", ""), tweet.getLocation()
 									.replace("'", "").replace("?", ""));
 							values.add(value);
+							LastTweetStore.getTweetIds().put(query, tweet.getId());
 						//}
 
 					} catch (Exception e) {
@@ -373,7 +380,7 @@ public class TwitController {
 			return "nok " + e.getErrorMessage();
 
 		} catch (Exception e) {
-			return "nok " + e.getMessage();
+			return "nok " + e.getStackTrace();
 		}
 
 	}
