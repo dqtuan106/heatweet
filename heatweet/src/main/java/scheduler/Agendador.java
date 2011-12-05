@@ -18,7 +18,7 @@ public class Agendador implements  Job{
 	
 	@Override
 	public void execute(JobExecutionContext arg0) throws JobExecutionException {
-		String retorno = twitController.carrega("upp", 400.0, -22.976730, -43.195080);
+		String retorno = twitController.carrega("brasileirao", 400.0, -22.976730, -43.195080);
 		
 		
 		System.out.println((new GregorianCalendar().getTime()) +" - "+  retorno);
