@@ -107,9 +107,12 @@ public class ServicesController {
 			Document doc = builder.parse(is);
 
 			XPath xpath = XPathFactory.newInstance().newXPath();
-			XPathExpression expr = xpath.compile("//Erro");
+			XPathExpression expr = xpath.compile("//Error");
+			
 			String status = expr.evaluate(doc);
-			if (status.equals("0")) {
+			expr = xpath.compile("//Found");
+			String found = expr.evaluate(doc);
+			if (status.equals("0") && !found.equals("0")) {
 
 				expr = xpath.compile("//latitude");
 				String lat = expr.evaluate(doc);
@@ -121,7 +124,7 @@ public class ServicesController {
 
 				return local;
 			} else {
-				System.out.println(status);
+				System.out.println(status+" - "+ endereco);
 			}
 			
 		} catch (MalformedURLException e) {
@@ -151,7 +154,16 @@ public class ServicesController {
 		return null;
 
 	}
-
+	@Path("geocode")
+	public String googleGeocode(@QueryParam("endereco")String endereco) {
+		//Location local = geocodeEndereco(endereco);
+		Location local = geocodeYahoo(endereco);
+		if(local!=null) {
+			return local.getLatitude() +";"+local.getLongitude();
+		} 
+		return "";
+		
+	}
 	public Location geocodeEndereco( String endereco) {
 		Location local = new Location();
 		try {
@@ -182,7 +194,7 @@ public class ServicesController {
 
 				return local;
 			} else {
-				System.out.println(status);
+				System.out.println(status +" - endereco: " + endereco);
 			}
 			
 		} catch (MalformedURLException e) {

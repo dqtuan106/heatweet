@@ -1,7 +1,10 @@
 package controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -310,23 +313,25 @@ public class FusionController {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String selectByLocation(@QueryParam("table") String table){
 		try {
-			String query ="?sql="+ URLEncoder.encode("SELECT Location, count(location) FROM " + table +" GROUP BY Location", "UTF-8");
+			String query ="?sql="+ URLEncoder.encode("SELECT  Location, count(location) FROM " + table +" GROUP BY Location", "UTF-8");
 		this.url = new URL(FUSION_SERVICE_URL+ query);
 
 		authenticate();
 		
 			GDataRequest request = service.getRequestFactory().getRequest(RequestType.QUERY, this.url ,
-					ContentType.TEXT_PLAIN);
-		
-		OutputStreamWriter writer;
-		
-		writer = new OutputStreamWriter(request.getRequestStream());
-
+					ContentType.TEXT_PLAIN);			
 				
 
 		request.execute();
 		
-		String decoded = new String();
+		BufferedReader br = new BufferedReader(new InputStreamReader(
+				request.getResponseStream()));
+		String line;
+		StringWriter conteudo = new StringWriter();
+		while ((line = br.readLine()) != null) {
+			conteudo.append(line+";");
+		}
+		/*String decoded = new String();
 		Scanner scanner = new Scanner(request.getResponseStream(), "UTF-8");
 		while (scanner.hasNextLine()) {
 			scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0);
@@ -338,8 +343,9 @@ public class FusionController {
 			if (!match.group(4).equals(",")) {
 				System.out.println("|");
 			}
-		}
-		return decoded;
+		}*/
+		System.out.println(conteudo.toString());
+		return conteudo.toString();
 		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
