@@ -43,7 +43,8 @@
 					
 					
 				} else {
-					ret = "nok";
+					alert("Geocode was not successful for the following reason: "
+							+ status);
 				}						
 			});						
 
@@ -84,8 +85,9 @@
 		}
 		var data;
 		function addPoints() {
-			var url = "/heatweet/fusion/selectByLocation?table=2228856";
-			var url2= "/heatweet/services/geocode?endereco=";
+			var url = "/heatweet/fusion/selectByLocationByDate?table=2228251";
+			//var url = "/heatweet/fusion/selectByLocation?table=2228856";
+			var url2= "/heatweet/fusion/selectDates?table=2228251";
 			var heatmap = new HeatmapOverlay(map, {
 				"radius" : 15,
 				"visible" : true,
@@ -93,18 +95,29 @@
 			});
 			var dados;
 			dojo.xhrGet({
-				url : url,
+				url : url2,
 				load : function(response) {
-					dados = response.split(";");
-					dojo.forEach(dados, function(item, index) {
+					datas = response.split(";");					
+					dojo.forEach(datas, function(item, index) {
 						if (index != 0) {
-
-							local = item.split(",")[0].toString().replace("\"",
-									"").replace(",", " ");
-							count = item.split(",")[1];
-							if(count > max) {
-								max = count;
-							}
+							dojo.xhrGet({ 
+								url : url+"&amp;Date="+encodeURI(item.split(",")[0]),
+								load : function(response) {
+									dados = response.split(";");
+									dojo.forEach(dados, function(item, index) {
+										if (index != 0) {
+											local = item.split(",")[0].toString().replace("\"",
+											"").replace(",", " ");
+												count = item.split(",")[1];
+												if(count > max) {
+													max = count;
+												}
+												heatmap.addDataPoint(local.split(" ")[0], local.split(" ")[1], count);
+										}
+									});
+								}
+							});
+							
 							/*dojo.xhrGet({
 								url : url2+local,
 								load : function(response) {
@@ -114,7 +127,8 @@
 									heatmap.addDataPoint(lat, lng, count);
 								}
 							});*/
-							code(local,heatmap,count);
+							//code(local,heatmap,count);
+							
 						}
 
 					});

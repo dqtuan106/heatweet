@@ -27,6 +27,7 @@ import model.Value;
 
 import com.google.gdata.client.ClientLoginAccountType;
 import com.google.gdata.client.GoogleService;
+import com.google.gdata.client.GoogleAuthTokenFactory.UserToken;
 import com.google.gdata.client.Service.GDataRequest;
 import com.google.gdata.client.Service.GDataRequest.RequestType;
 import com.google.gdata.util.AuthenticationException;
@@ -37,18 +38,19 @@ import com.google.gdata.util.ServiceException;
 public class FusionController {
 	private static final Pattern CSV_VALUE_PATTERN = Pattern
 			.compile("([^,\\r\\n\"]*|\"(([^\"]*\"\")*[^\"]*)\")(,|\\r?\\n)");
-	private GoogleService service;
+	private static GoogleService service;
 	private static final String FUSION_SERVICE_URL = "https://www.google.com/fusiontables/api/query";
 	URL url;
 
-	private GoogleService authenticate() throws AuthenticationException {
+	private void authenticate() throws AuthenticationException {
 		if (service == null) {
 			service = new GoogleService("fusiontables", "HeaTweet");
 			service.setUserCredentials("heatweet@gmail.com", "ht2011infovis",
 					ClientLoginAccountType.GOOGLE);
+		
 		}
 
-		return service;
+
 	}
 
 	@GET
@@ -163,14 +165,14 @@ public class FusionController {
 			Iterator<Value> iter = values.iterator();
 			while (iter.hasNext()) {
 				Value value = iter.next();
-				String q =URLEncoder.encode(
+				String q = URLEncoder.encode(
 						"INSERT INTO 2228772 (tweet,Location) VALUES (' "
-								+ value.getTweet() + " ','" + value.getLocation()
-								+ "');", "UTF-8");
-				
+								+ value.getTweet() + " ','"
+								+ value.getLocation() + "');", "UTF-8");
+
 				writer.append(q);
 			}
-			
+
 			writer.flush();
 
 			request.execute();
@@ -202,7 +204,7 @@ public class FusionController {
 		return "NOK";
 	}
 
-	public String batchInsert(String table,List<Value> values,Calendar cal) {
+	public String batchInsert(String table, List<Value> values, Calendar cal) {
 
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
@@ -216,20 +218,24 @@ public class FusionController {
 			writer = new OutputStreamWriter(request.getRequestStream());
 			writer.append("sql=");
 			Iterator<Value> iter = values.iterator();
-			
-			String data = cal.get(Calendar.DAY_OF_MONTH) +"/" +cal.get(Calendar.MONTH)+"/"+cal.get(Calendar.YEAR);
-			String hora = cal.get(Calendar.HOUR_OF_DAY)+":"+ cal.get(Calendar.MINUTE);
+
+			String data = cal.get(Calendar.DAY_OF_MONTH) + "/"
+					+ cal.get(Calendar.MONTH) + "/" + cal.get(Calendar.YEAR);
+			String hora = cal.get(Calendar.HOUR_OF_DAY) + ":"
+					+ cal.get(Calendar.MINUTE);
 			while (iter.hasNext()) {
 				Value value = iter.next();
-				
-				String q =URLEncoder.encode(
-						"INSERT INTO "+table +" (Text,Location,Date) VALUES ('"
-								+ value.getTweet().replace("'", "") + "','" + value.getLocation()
-								+ "','"+data+" "+hora+"');" , "UTF-8");
-				
+
+				String q = URLEncoder.encode(
+						"INSERT INTO " + table
+								+ " (Text,Location,Date) VALUES ('"
+								+ value.getTweet().replace("'", "") + "','"
+								+ value.getLocation() + "','" + data + " "
+								+ hora + "');", "UTF-8");
+
 				writer.append(q);
 			}
-			
+
 			writer.flush();
 
 			request.execute();
@@ -260,6 +266,7 @@ public class FusionController {
 		}
 		return "NOK";
 	}
+
 	@GET
 	@Path(value = "deleteAll")
 	public String deleteAll(@QueryParam("table") String table) {
@@ -307,46 +314,124 @@ public class FusionController {
 		return "NOK";
 
 	}
-	
+
 	@GET
-	@Path(value="selectByLocation") 
+	@Path(value = "selectByLocation")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String selectByLocation(@QueryParam("table") String table){
+	public String selectByLocation(@QueryParam("table") String table) {
 		try {
-			String query ="?sql="+ URLEncoder.encode("SELECT  Location, count(location) FROM " + table +" GROUP BY Location", "UTF-8");
-		this.url = new URL(FUSION_SERVICE_URL+ query);
+			String query = "?sql="
+					+ URLEncoder.encode(
+							"SELECT  Location, count(location) FROM " + table
+									+ " GROUP BY Location", "UTF-8");
+			this.url = new URL(FUSION_SERVICE_URL + query);
 
-		authenticate();
-		
-			GDataRequest request = service.getRequestFactory().getRequest(RequestType.QUERY, this.url ,
-					ContentType.TEXT_PLAIN);			
-				
+			authenticate();
 
-		request.execute();
-		
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				request.getResponseStream()));
-		String line;
-		StringWriter conteudo = new StringWriter();
-		while ((line = br.readLine()) != null) {
-			conteudo.append(line+";");
-		}
-		/*String decoded = new String();
-		Scanner scanner = new Scanner(request.getResponseStream(), "UTF-8");
-		while (scanner.hasNextLine()) {
-			scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0);
-			MatchResult match = scanner.match();
-			String quotedString = match.group(2);
-			decoded = quotedString == null ? match.group(1) : quotedString
-					.replaceAll("\"\"", "\"");
-			System.out.print("|" + decoded);
-			if (!match.group(4).equals(",")) {
-				System.out.println("|");
+			GDataRequest request = service.getRequestFactory().getRequest(
+					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);
+
+			request.execute();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					request.getResponseStream()));
+			String line;
+			StringWriter conteudo = new StringWriter();
+			while ((line = br.readLine()) != null) {
+				conteudo.append(line + ";");
 			}
-		}*/
-		System.out.println(conteudo.toString());
-		return conteudo.toString();
+			/*
+			 * String decoded = new String(); Scanner scanner = new
+			 * Scanner(request.getResponseStream(), "UTF-8"); while
+			 * (scanner.hasNextLine()) {
+			 * scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0); MatchResult
+			 * match = scanner.match(); String quotedString = match.group(2);
+			 * decoded = quotedString == null ? match.group(1) : quotedString
+			 * .replaceAll("\"\"", "\""); System.out.print("|" + decoded); if
+			 * (!match.group(4).equals(",")) { System.out.println("|"); } }
+			 */
+			System.out.println(conteudo.toString());
+			return conteudo.toString();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+
+	@GET
+	@Path(value = "selectDates")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String selectDates(@QueryParam("table") String table) {
+		try {
+			authenticate();
+			String query = "?sql="
+					+ URLEncoder.encode("SELECT Date, count() FROM " + table+" GROUP BY Date", "UTF-8");
+			this.url = new URL(FUSION_SERVICE_URL + query);
+			GDataRequest request = service.getRequestFactory().getRequest(
+					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);
+			request.execute();
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					request.getResponseStream()));			
+			String line;
+			StringWriter conteudo = new StringWriter();
+			while ((line = br.readLine()) != null) {
+				conteudo.append(line + ";");
+			}
+			System.out.println(conteudo.toString());
+			return conteudo.toString();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+
+	@GET
+	@Path(value = "selectByLocationByDate")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String selectByLocationByDate(@QueryParam("table") String table,@QueryParam("date") String Date) {
+		try {		
+			authenticate();
+			String query = "?sql="
+					+ URLEncoder.encode("SELECT  Location, count(*) FROM "
+							+ table + " WHERE Date  ="+Date+" GROUP BY Location", "UTF-8");			
+			GDataRequest request = service.getRequestFactory().getRequest(
+					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);			
+			this.url = new URL(FUSION_SERVICE_URL + query);
+			request.execute();
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					request.getResponseStream()));
+
 		
+
+	
+			String line;
+			StringWriter conteudo = new StringWriter();
+			while ((line = br.readLine()) != null) {
+				conteudo.append(line + ";");
+			}
+			/*
+			 * String decoded = new String(); Scanner scanner = new
+			 * Scanner(request.getResponseStream(), "UTF-8"); while
+			 * (scanner.hasNextLine()) {
+			 * scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0); MatchResult
+			 * match = scanner.match(); String quotedString = match.group(2);
+			 * decoded = quotedString == null ? match.group(1) : quotedString
+			 * .replaceAll("\"\"", "\""); System.out.print("|" + decoded); if
+			 * (!match.group(4).equals(",")) { System.out.println("|"); } }
+			 */
+			System.out.println(conteudo.toString());
+			return conteudo.toString();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
