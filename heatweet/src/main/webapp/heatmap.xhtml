@@ -99,9 +99,10 @@
 				load : function(response) {
 					datas = response.split(";");					
 					dojo.forEach(datas, function(item, index) {
+						
 						if (index != 0) {
-							dojo.xhrGet({ 
-								url : url+"&amp;Date="+encodeURI(item.split(",")[0]),
+							dojo.xhrGet({ 								
+								url : url+"&amp;date="+encodeURIComponent(item.split(",")[0]),
 								load : function(response) {
 									dados = response.split(";");
 									dojo.forEach(dados, function(item, index) {
@@ -129,8 +130,7 @@
 							});*/
 							//code(local,heatmap,count);
 							
-						}
-
+						}						
 					});
 
 				}
