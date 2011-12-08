@@ -23,6 +23,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import store.AccessTokenStore;
+
 import model.Value;
 
 import com.google.gdata.client.ClientLoginAccountType;
@@ -37,28 +39,19 @@ import com.google.gdata.util.ServiceException;
 @Path("fusion")
 public class FusionController {
 	private static final Pattern CSV_VALUE_PATTERN = Pattern
-			.compile("([^,\\r\\n\"]*|\"(([^\"]*\"\")*[^\"]*)\")(,|\\r?\\n)");
-	private static GoogleService service;
+			.compile("([^,\\r\\n\"]*|\"(([^\"]*\"\")*[^\"]*)\")(,|\\r?\\n)");	
 	private static final String FUSION_SERVICE_URL = "https://www.google.com/fusiontables/api/query";
+	GoogleService service;
 	URL url;
 
-	private void authenticate() throws AuthenticationException {
-		if (service == null) {
-			service = new GoogleService("fusiontables", "HeaTweet");
-			service.setUserCredentials("heatweet@gmail.com", "ht2011infovis",
-					ClientLoginAccountType.GOOGLE);
-		
-		}
-
-
-	}
+	
 
 	@GET
 	@Path(value = "create")
 	public String createTable(@QueryParam("param") String param) {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.INSERT, this.url,
 					new ContentType("application/x-www-form-urlencoded"));
@@ -108,7 +101,7 @@ public class FusionController {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
 
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.INSERT, this.url,
 					new ContentType("application/x-www-form-urlencoded"));
@@ -154,7 +147,7 @@ public class FusionController {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
 
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.INSERT, this.url,
 					new ContentType("application/x-www-form-urlencoded"));
@@ -209,7 +202,7 @@ public class FusionController {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
 
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.INSERT, this.url,
 					new ContentType("application/x-www-form-urlencoded"));
@@ -273,7 +266,7 @@ public class FusionController {
 		try {
 			this.url = new URL(FUSION_SERVICE_URL);
 
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.INSERT, this.url,
 					new ContentType("application/x-www-form-urlencoded"));
@@ -326,7 +319,7 @@ public class FusionController {
 									+ " GROUP BY Location", "UTF-8");
 			this.url = new URL(FUSION_SERVICE_URL + query);
 
-			authenticate();
+			service = AccessTokenStore.authenticate();
 
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);
@@ -368,7 +361,7 @@ public class FusionController {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String selectDates(@QueryParam("table") String table) {
 		try {
-			authenticate();
+			service = AccessTokenStore.authenticate();
 			String query = "?sql="
 					+ URLEncoder.encode("SELECT Date, count() FROM " + table+" GROUP BY Date", "UTF-8");
 			this.url = new URL(FUSION_SERVICE_URL + query);
@@ -398,15 +391,17 @@ public class FusionController {
 	@GET
 	@Path(value = "selectByLocationByDate")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String selectByLocationByDate(@QueryParam("table") String table,@QueryParam("date") String Date) {
+	public String selectByLocationByDate(@QueryParam("table") String table,@QueryParam("date") String date) {
 		try {		
-			authenticate();
+			
+			service = AccessTokenStore.authenticate();
 			String query = "?sql="
-					+ URLEncoder.encode("SELECT  Location, count(*) FROM "
-							+ table + " WHERE Date  ="+Date+" GROUP BY Location", "UTF-8");			
+					+ URLEncoder.encode("SELECT  Location, count() FROM "
+							+ table + " WHERE Date  ='"+date+"' GROUP BY Location", "UTF-8");			
+			this.url = new URL(FUSION_SERVICE_URL + query);
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);			
-			this.url = new URL(FUSION_SERVICE_URL + query);
+			
 			request.execute();
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					request.getResponseStream()));

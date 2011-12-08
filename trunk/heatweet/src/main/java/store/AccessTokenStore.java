@@ -3,12 +3,28 @@ package store;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.google.gdata.client.ClientLoginAccountType;
+import com.google.gdata.client.GoogleService;
+import com.google.gdata.util.AuthenticationException;
+
 import twitter4j.auth.AccessToken;
 
 public class AccessTokenStore {
 	private static AccessToken accessToken;
 	private static Properties tokenProperties;
+	private static GoogleService service;
+	
+	public static GoogleService authenticate() throws AuthenticationException {
+		if (service == null) {
+			service = new GoogleService("fusiontables", "HeaTweet");
+			service.setUserCredentials("heatweet@gmail.com", "ht2011infovis",
+					ClientLoginAccountType.GOOGLE);
+		
+		}
+		
+		return service;
 
+	}
 	private static void carregaProperties() {
 		try {
 			if (tokenProperties == null) {
