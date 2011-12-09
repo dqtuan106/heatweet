@@ -358,7 +358,7 @@ public class FusionController {
 
 	@GET
 	@Path(value = "selectDates")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public String selectDates(@QueryParam("table") String table) {
 		try {
 			service = AccessTokenStore.authenticate();
@@ -390,7 +390,7 @@ public class FusionController {
 
 	@GET
 	@Path(value = "selectByLocationByDate")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public String selectByLocationByDate(@QueryParam("table") String table,@QueryParam("date") String date) {
 		try {		
 			
@@ -398,6 +398,54 @@ public class FusionController {
 			String query = "?sql="
 					+ URLEncoder.encode("SELECT  Location, count() FROM "
 							+ table + " WHERE Date  ='"+date+"' GROUP BY Location", "UTF-8");			
+			this.url = new URL(FUSION_SERVICE_URL + query);
+			GDataRequest request = service.getRequestFactory().getRequest(
+					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);			
+			
+			request.execute();
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					request.getResponseStream()));
+
+		
+
+	
+			String line;
+			StringWriter conteudo = new StringWriter();
+			while ((line = br.readLine()) != null) {
+				conteudo.append(line + ";");
+			}
+			/*
+			 * String decoded = new String(); Scanner scanner = new
+			 * Scanner(request.getResponseStream(), "UTF-8"); while
+			 * (scanner.hasNextLine()) {
+			 * scanner.findWithinHorizon(CSV_VALUE_PATTERN, 0); MatchResult
+			 * match = scanner.match(); String quotedString = match.group(2);
+			 * decoded = quotedString == null ? match.group(1) : quotedString
+			 * .replaceAll("\"\"", "\""); System.out.print("|" + decoded); if
+			 * (!match.group(4).equals(",")) { System.out.println("|"); } }
+			 */
+			System.out.println(conteudo.toString());
+			return conteudo.toString();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+	@GET
+	@Path(value = "selectByLocationByMaxDate")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String selectByLocationByMaxDate(@QueryParam("table") String table,@QueryParam("date") String date) {
+		try {		
+			
+			service = AccessTokenStore.authenticate();
+			String query = "?sql="
+					+ URLEncoder.encode("SELECT  Location, count() FROM "
+							+ table + " WHERE Date  <='"+date+"' GROUP BY Location", "UTF-8");			
 			this.url = new URL(FUSION_SERVICE_URL + query);
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);			
