@@ -363,7 +363,7 @@ public class FusionController {
 		try {
 			service = AccessTokenStore.authenticate();
 			String query = "?sql="
-					+ URLEncoder.encode("SELECT Date, count() FROM " + table+" GROUP BY Date", "UTF-8");
+					+ URLEncoder.encode("SELECT Date, count() FROM " + table+" GROUP BY Date Order By Date", "UTF-8");
 			this.url = new URL(FUSION_SERVICE_URL + query);
 			GDataRequest request = service.getRequestFactory().getRequest(
 					RequestType.QUERY, this.url, ContentType.TEXT_PLAIN);
