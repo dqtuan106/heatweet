@@ -300,7 +300,8 @@ public class TwitController {
 	public String carrega(@QueryParam("q") String query,
 			@QueryParam("r") double raio,
 			@QueryParam("latitude") double latitude,
-			@QueryParam("longitude") double longitude) {
+			@QueryParam("longitude") double longitude,
+			@QueryParam("tabela") String table) {
 		try {
 			FusionController fusionController = new FusionController();
 			ServicesController servicesController = new ServicesController();
@@ -338,7 +339,7 @@ public class TwitController {
 						Long tempoInicio = System.currentTimeMillis();
 						Location location = new Location();
 						Value value;
-						/*if (tweet.getGeoLocation() != null) {
+						if (tweet.getGeoLocation() != null) {
 							location.setLatitude(tweet.getGeoLocation()
 									.getLatitude());
 							location.setLongitude(tweet.getGeoLocation()
@@ -353,13 +354,14 @@ public class TwitController {
 									+ " " + location.getLongitude());
 
 							values.add(value);
-						} else {*/
+							System.out.println(tweet.getLocation());
+						} /*else {
 							value = new Value(tweet.getText().replace("'", "")
 									.replace("?", ""), tweet.getLocation()
 									.replace("'", "").replace("?", ""));
 							values.add(value);
 							LastTweetStore.getTweetIds().put(query, tweet.getId());
-						//}
+						}*/
 
 					} catch (Exception e) {
 						System.out.println("PROBLEMA em "
@@ -369,7 +371,7 @@ public class TwitController {
 					}
 
 				}
-				fusionController.batchInsert("2228856", values, cal);
+				fusionController.batchInsert(table, values, cal);
 				
 			}
 
